@@ -127,13 +127,13 @@ O projeto contém `vercel.json`, com frontend Vite em `dist/` e a função `api/
 
    As duas variáveis Turso são obrigatórias. `APP_ORIGIN` é recomendado para o domínio de produção; sem ele a API valida a origem contra o host/protocolo recebidos da Vercel. Se usar domínios de preview, configure `APP_ORIGIN` por ambiente ou deixe-a sem valor no preview, em vez de usar o domínio de produção.
 
-3. Use **Node.js 22.x**, **Framework Preset: Vite**, **Build Command: npm run build** e **Output Directory: dist**. A versão `22.x` em `package.json` prevalece sobre o padrão Node 26 do projeto.
+3. Use **Node.js 22.x**, **Framework Preset: Vite**, **Install Command: npm ci --include=dev --ignore-scripts**, **Build Command: npm run build** e **Output Directory: dist**. A versão `22.x` em `package.json` prevalece sobre o padrão Node 26 do projeto.
 4. Faça um novo deploy, desmarcando o reaproveitamento do cache de build após a mudança de Node. O build instala as dependências e compila, mas não depende de credenciais para consultar o banco.
 5. Acesse `/api/health` no domínio implantado: deve retornar `{ "status": "ok" }`. Depois teste cadastro, login e uma fase.
 
 As tabelas e as 15 questões são criadas no banco remoto de forma idempotente na primeira requisição. Contas e progresso sobrevivem a novos deploys porque ficam no Turso. Sem credenciais, a função retorna HTTP 503 e **não cria um banco descartável em `/tmp`**.
 
-Não use o arquivo `data/contalingo.sqlite` como banco de produção na Vercel. O sistema de arquivos das funções não é um disco persistente da aplicação. O driver remoto usa `@libsql/client/web`, por HTTP, sem carregar `better-sqlite3` na função.
+Não use o arquivo `data/contalingo.sqlite` como banco de produção na Vercel. O sistema de arquivos das funções não é um disco persistente da aplicação. O driver remoto usa `@libsql/client/web`, por HTTP, sem carregar `better-sqlite3` na função. O `better-sqlite3` é opcional e a instalação da Vercel desativa scripts de instalação para impedir a compilação do addon local. No computador de desenvolvimento, use `npm ci` normalmente para instalar o SQLite local.
 
 O banco local e a conta TESTE não são enviados automaticamente para o Turso. É possível cadastrar uma nova conta no site, criar a conta de teste no banco remoto executando `npm run seed:test` com as variáveis Turso definidas localmente, ou importar uma cópia do banco SQLite já migrado. Faça backup antes de importar dados existentes. A migração local da versão 1 deve ser executada pelo projeto antes da importação; o inicializador remoto aceita banco vazio ou versão 2.
 
@@ -152,3 +152,13 @@ APP_ORIGIN=https://seu-dominio.com HOST=127.0.0.1 PORT=3001 npm start
 O servidor serve API e `dist/`. Use um proxy HTTPS e `APP_ORIGIN` com a origem pública exata, sem barra final. As variáveis estão em `.env.example`; defina-as no ambiente, pois `.env` não é carregado automaticamente. `npm run preview` serve apenas o frontend.
 
 Sem Turso configurado, defina `DATABASE_PATH` para alterar o arquivo do banco e use um volume persistente gravável. Para backup simples consistente, pare o processo, copie todo o diretório `data/` e reinicie. Banco, relatórios e backups não devem ser publicados. O SQLite local requer uma única instância. O limitador de requisições em memória atua por instância do servidor; na Vercel ele não representa um limite global entre funções.
+
+### Se o log ainda mostrar Node 26 ou erro do better-sqlite3
+
+Isso indica que a implantação ainda está usando uma configuração ou revisão diferente da preparada aqui. Confirme:
+
+- O commit implantado contém o `package.json`, `package-lock.json` e `vercel.json` atualizados.
+- **Settings → General → Root Directory** aponta para a pasta que contém esses arquivos (se o repositório tem uma pasta `Contalingo`, selecione-a).
+- **Settings → Build and Deployment → Node.js Version** está em **22.x**.
+- Se houver override de **Install Command** no painel, desative-o para usar `vercel.json` ou configure exatamente `npm ci --include=dev --ignore-scripts`.
+- Crie uma nova implantação a partir do commit atualizado, sem reaproveitar o cache. Reimplantar o mesmo commit antigo não inclui as alterações locais.

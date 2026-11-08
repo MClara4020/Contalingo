@@ -8,5 +8,6 @@
       "source": "/api/:path*",
       "destination": "/api/index?__route=:path*"
     }
-  ]
+  ],
+  "installCommand": "npm ci --include=dev --ignore-scripts"
 }
