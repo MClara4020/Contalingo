@@ -13,9 +13,11 @@
     "test": "tsx --test server/*.test.ts",
     "report": "tsx scripts/export-report.ts",
     "test:e2e": "playwright test",
-    "seed:test": "node --import tsx scripts/create-test-user.ts"
+    "seed:test": "node --import tsx scripts/create-test-user.ts",
+    "test:libsql": "TEST_DATABASE_DRIVER=libsql tsx --test server/app.test.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "better-sqlite3": "^11.10.0",
     "cookie-parser": "^1.4.7",
     "exceljs": "^4.4.0",
@@ -39,5 +41,8 @@
     "tsx": "^4.23.15",
     "typescript": "~5.7.2",
     "vite": "^6.0.5"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

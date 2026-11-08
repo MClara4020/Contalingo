@@ -1,13 +1,13 @@
 import { randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { openDatabase } from '../server/db.js';
+import { connectDatabase } from '../server/store.js';
 
 const scrypt=promisify(scryptCallback);
 const matricula='TESTE';
 const password='Contalingo123';
-const db=openDatabase(process.env.DATABASE_PATH||'data/contalingo.sqlite');
+const db=await connectDatabase();
 try {
-  const existing=db.prepare('SELECT password FROM users WHERE matricula=?').get(matricula) as {password:string}|undefined;
+  const existing=await db.prepare('SELECT password FROM users WHERE matricula=?').get(matricula) as {password:string}|undefined;
   if(existing){
     const [salt,hash]=existing.password.split(':');
     const supplied=await scrypt(password,salt,64) as Buffer;
@@ -16,7 +16,7 @@ try {
   }else{
     const salt=randomBytes(16).toString('hex');
     const hash=(await scrypt(password,salt,64) as Buffer).toString('hex');
-    db.prepare('INSERT INTO users(id,name,matricula,password) VALUES(?,?,?,?)').run(randomUUID(),'Aluno de Teste',matricula,`${salt}:${hash}`);
+    await db.prepare('INSERT INTO users(id,name,matricula,password) VALUES(?,?,?,?)').run(randomUUID(),'Aluno de Teste',matricula,`${salt}:${hash}`);
     console.log('Conta de teste criada com sucesso.');
   }
   console.log(`Matrícula: ${matricula}\nSenha: ${password}`);

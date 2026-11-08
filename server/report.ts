@@ -1,12 +1,14 @@
 import ExcelJS from 'exceljs';
 import type Database from 'better-sqlite3';
+import { asStore, type Store } from './store.js';
 import { phases, BANK_VERSION } from './questions.js';
 import { rankFor, starsFor } from './game.js';
 
 /** All attempts are used for analytics; game scores come only from current best results. */
-export function buildReport(db: Database.Database) {
+export function buildReport(input: Database.Database | Store) {
+  const db=asStore(input);
   // A single read transaction keeps all sheets consistent while students are playing.
-  return db.transaction(() => {
+  return db.transaction(async (db) => {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Contalingo';
     workbook.created = new Date();
@@ -29,11 +31,11 @@ export function buildReport(db: Database.Database) {
       ]),
       {header:'Todas as tentativas',key:'attempts',width:20},{header:'Derrotas',key:'losses',width:13},
     ]);
-    const users = db.prepare('SELECT id,name,matricula FROM users ORDER BY name,matricula').all() as {id:string;name:string;matricula:string}[];
+    const users = await db.prepare('SELECT id,name,matricula FROM users ORDER BY name,matricula').all() as {id:string;name:string;matricula:string}[];
     for (const u of users) {
-      const results=db.prepare('SELECT phase,correct,score FROM results WHERE user_id=?').all(u.id) as {phase:number;correct:number;score:number}[];
+      const results=await db.prepare('SELECT phase,correct,score FROM results WHERE user_id=?').all(u.id) as {phase:number;correct:number;score:number}[];
       const total=results.reduce((sum,r)=>sum+r.score,0);
-      const counts=db.prepare("SELECT COUNT(*) AS attempts, COALESCE(SUM(status='lost'),0) AS losses FROM attempts WHERE user_id=?").get(u.id) as {attempts:number;losses:number};
+      const counts=await db.prepare("SELECT COUNT(*) AS attempts, COALESCE(SUM(status='lost'),0) AS losses FROM attempts WHERE user_id=?").get(u.id) as {attempts:number;losses:number};
       const row:Record<string,string|number>={name:u.name,matricula:u.matricula,total,rank:rankFor(total),...counts};
       phases.forEach((_,i)=>{const r=results.find(r=>r.phase===i);row[`correct${i}`]=r?.correct??0;row[`score${i}`]=r?.score??0;row[`stars${i}`]=starsFor(r?.correct??0);});
       students.addRow(row);
@@ -44,7 +46,7 @@ export function buildReport(db: Database.Database) {
       {header:'Taxa de erro',key:'errorRate',width:15},{header:'Alunos que erraram',key:'students',width:22},
       ...'ABCD'.split('').map(letter=>({header:`Escolheram ${letter}`,key:letter,width:17})),
     ]);
-    const errorRows=db.prepare(`SELECT q.id,q.phase,q.payload,COUNT(r.id) AS answers,
+    const errorRows=await db.prepare(`SELECT q.id,q.phase,q.payload,COUNT(r.id) AS answers,
       COALESCE(SUM(r.is_correct=0),0) AS errors,
       COUNT(DISTINCT CASE WHEN r.is_correct=0 THEN a.user_id END) AS students,
       COALESCE(SUM(r.selected_option=0),0) AS A,COALESCE(SUM(r.selected_option=1),0) AS B,
@@ -60,14 +62,14 @@ export function buildReport(db: Database.Database) {
       {header:'Resultado',key:'status',width:16},{header:'Versão do banco de questões',key:'bank_version',width:28},
     ]);
     const statuses:Record<string,string>={active:'Em andamento',complete:'Vitória',lost:'Derrota',abandoned:'Interrompida'};
-    const attemptRows=db.prepare('SELECT a.*,u.name,u.matricula FROM attempts a JOIN users u ON u.id=a.user_id ORDER BY a.created_at,a.id').all() as {phase:number;status:string}[];
+    const attemptRows=await db.prepare('SELECT a.*,u.name,u.matricula FROM attempts a JOIN users u ON u.id=a.user_id ORDER BY a.created_at,a.id').all() as {phase:number;status:string}[];
     attemptRows.forEach(row=>attempts.addRow({...row,phase:row.phase+1,status:statuses[row.status]||row.status}));
     const responses=sheet('Respostas',[
       {header:'Tentativa',key:'attempt_id',width:38},{header:'Matrícula',key:'matricula',width:24},{header:'Questão',key:'question_id',width:20},
       {header:'Posição na fase',key:'position',width:17},{header:'Alternativa escolhida',key:'selected_option',width:23},
       {header:'Acertou',key:'is_correct',width:12},{header:'Respondida em (UTC)',key:'answered_at',width:27},
     ]);
-    const responseRows=db.prepare('SELECT r.*,u.matricula FROM responses r JOIN attempts a ON a.id=r.attempt_id JOIN users u ON u.id=a.user_id ORDER BY a.created_at,a.id,r.position').all() as {position:number;selected_option:number;is_correct:number}[];
+    const responseRows=await db.prepare('SELECT r.*,u.matricula FROM responses r JOIN attempts a ON a.id=r.attempt_id JOIN users u ON u.id=a.user_id ORDER BY a.created_at,a.id,r.position').all() as {position:number;selected_option:number;is_correct:number}[];
     responseRows.forEach(row=>responses.addRow({...row,position:row.position+1,selected_option:'ABCD'[row.selected_option],is_correct:row.is_correct?'Sim':'Não'}));
     const notes=workbook.addWorksheet('Sobre o relatório');
     notes.columns=[{header:'Item',key:'item',width:27},{header:'Descrição',key:'description',width:110}];
@@ -81,5 +83,5 @@ export function buildReport(db: Database.Database) {
       ['Referência histórica','Conteúdo baseado no material didático fornecido e na NBC T 11.8 de 2005; não é uma declaração de norma vigente.'],
     ].forEach(([item,description])=>notes.addRow({item,description}));
     return workbook;
-  })();
+  }, 'read')();
 }

@@ -8,12 +8,17 @@ import { createApp } from './app.js';
 import { openDatabase } from './db.js';
 import { phases } from './questions.js';
 import { buildReport } from './report.js';
+import { createClient } from '@libsql/client';
+import { initializeLibsql, libsqlStore } from './store.js';
 const directory=mkdtempSync(join(tmpdir(),'contalingo-test-'));
 const db=openDatabase(join(directory,'test.sqlite'));
-const server=createApp(db).listen(0,'127.0.0.1');
+const client=process.env.TEST_DATABASE_DRIVER==='libsql'?createClient({url:`file:${join(directory,'test.sqlite')}`}):undefined;
+if(client)await initializeLibsql(client);
+const backend=client?libsqlStore(client):db;
+const server=createApp(backend).listen(0,'127.0.0.1');
 let base=''; let cookie='';let counter=0;
 before(async()=>{if(!server.listening)await new Promise<void>(resolve=>server.once('listening',resolve));base=`http://127.0.0.1:${(server.address() as AddressInfo).port}`;});
-after(async()=>{await new Promise<void>(resolve=>server.close(()=>resolve()));db.close();rmSync(directory,{recursive:true,force:true});});
+after(async()=>{await new Promise<void>(resolve=>server.close(()=>resolve()));client?.close();db.close();rmSync(directory,{recursive:true,force:true});});
 async function request(path:string,method='GET',body?:unknown,session=cookie,origin?:string){const response=await fetch(base+'/api'+path,{method,headers:{'Content-Type':'application/json',...(session?{Cookie:session}:{}),...(origin?{Origin:origin}:{})},body:method==='GET'?undefined:JSON.stringify(body??{})});return {status:response.status,body:await response.json() as any,cookie:response.headers.get('set-cookie')?.split(';')[0],headers:response.headers};}
 async function register(){const r=await request('/auth/register','POST',{name:'Aluno',matricula:`2026-${++counter}`,password:'senha-segura123'});assert.equal(r.status,201);cookie=r.cookie!;return r;}
 function correctOption(phase:number,question:{scenario:string}){return phases[phase].questions.find(q=>q.scenario===question.scenario)!.correct;}
@@ -60,7 +65,7 @@ test('planilha reúne alunos, melhores resultados e erros de todas as tentativas
  await play(0,[0,1,2]); // Derrota.
  await play(0);        // Melhor tentativa: 55.
  await play(0,[0]);    // Vitória inferior: não substitui 55.
- const workbook=buildReport(db);
+ const workbook=await buildReport(backend);
  const buffer=await workbook.xlsx.writeBuffer();
  assert.ok(buffer.byteLength>0);
  const students=workbook.getWorksheet('Alunos')!;
@@ -71,7 +76,7 @@ test('planilha reúne alunos, melhores resultados e erros de todas as tentativas
  const studentAttempts=attempts.getRows(2,attempts.rowCount-1)!.filter(row=>row.getCell('matricula').value===enrollment);
  assert.equal(studentAttempts.length,3);assert.ok(studentAttempts.every(row=>row.getCell('ended_at').value));
  await request('/me/progress','DELETE');
- const afterReset=buildReport(db);
+ const afterReset=await buildReport(backend);
  const tab=afterReset.getWorksheet('Alunos')!;
  const resetRow=tab.getRows(2,tab.rowCount-1)!.find(row=>row.getCell('matricula').value===enrollment)!;
  assert.equal(resetRow.getCell('total').value,0);assert.equal(resetRow.getCell('attempts').value,3);
