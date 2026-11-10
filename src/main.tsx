@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BookOpen, ArrowRight, Check, X, FileSearch, ChevronRight, LogOut, Lightbulb } from 'lucide-react';
 import { api, ApiError, type Save, type Phase, type Question, type Attempt, type AnswerResponse } from './api';
 import './style.css';
+import './game.css';
 import { RulesDialog } from './RulesDialog';
 import { AuthScreen } from './AuthScreen';
 import { PhaseMap } from './PhaseMap';

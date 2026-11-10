@@ -1,0 +1,743 @@
+
+:root {
+  --fundo: #eaf0ff;
+  --fundo-2: #f6f8ff;
+  --superficie: #ffffff;
+  --texto: #1f2a44;
+  --texto-suave: #5a6786;
+  --borda: #d6def2;
+
+  --azul: #3b5bdb;
+  --azul-escuro: #2b44a8;
+  --azul-claro: #e4eaff;
+
+  --verde: #2b9a46;
+  --verde-escuro: #1f7a35;
+  --verde-claro: #dff5e6;
+  --verde-texto: #14532d;
+  --verde-barra: #58cc02;
+
+  --vermelho: #d93a3f;
+  --vermelho-escuro: #b02a2e;
+  --vermelho-claro: #ffe3e3;
+  --vermelho-texto: #7f1d1d;
+  --coracao: #ff4b4b;
+
+  --amarelo: #ffc800;
+  --amarelo-escuro: #e0a800;
+
+  --raio: 16px;
+  --raio-grande: 22px;
+  --largura: 440px;
+}
+
+body {
+  color: var(--texto);
+  background: var(--fundo);
+  font-family: 'Nunito', sans-serif;
+}
+
+/* Todas as telas de jogo: fundo colorido, coluna central mais larga */
+main.login-page,
+main.phase-map-page,
+main.quiz-page,
+main.phase-complete-page,
+main.phase-lost-page,
+main.journey-result-page {
+  background: linear-gradient(180deg, var(--fundo) 0%, var(--fundo-2) 100%);
+}
+.login-panel,
+.phase-map,
+.quiz-panel,
+.phase-complete,
+.phase-lost,
+.journey-result {
+  max-width: var(--largura);
+}
+
+/* ---------- 2. Botões "3D" ---------- */
+.login-submit,
+.login-switch,
+.primary,
+.secondary {
+  min-height: 54px;
+  border-radius: var(--raio);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: none;
+  transition: transform .08s, border-bottom-width .08s, background .15s, filter .15s;
+}
+.login-submit,
+.primary {
+  background: var(--azul);
+  color: #fff;
+  border: 0;
+  border-bottom: 5px solid var(--azul-escuro);
+}
+.login-submit:hover:not(:disabled),
+.primary:hover:not(:disabled) {
+  background: #4a69e6;
+}
+.login-switch,
+.secondary {
+  background: #fff;
+  color: var(--azul);
+  border: 2px solid var(--borda);
+  border-bottom-width: 5px;
+}
+.login-switch:hover:not(:disabled),
+.secondary:hover:not(:disabled) {
+  background: var(--azul-claro);
+}
+.login-submit:active:not(:disabled),
+.primary:active:not(:disabled),
+.login-switch:active:not(:disabled),
+.secondary:active:not(:disabled) {
+  transform: translateY(4px);
+  border-bottom-width: 1px;
+}
+.login-submit:disabled,
+.primary:disabled {
+  background: #c9d0e6;
+  border-bottom-color: #aab3d1;
+  color: #fff;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--amarelo);
+  outline-offset: 3px;
+}
+
+/* ---------- 3. Login e cadastro ---------- */
+.login-panel {
+  max-width: 400px;
+}
+.login-illustration {
+  width: 150px;
+  height: 150px;
+  animation: flutuar 3.2s ease-in-out infinite;
+}
+.login-intro h1 {
+  color: var(--azul);
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+.login-intro p,
+.register-intro p {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+.register-intro h1 {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.login-field label {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--texto);
+}
+.login-field input {
+  min-height: 56px;
+  border: 2px solid var(--borda);
+  border-radius: var(--raio);
+  font-size: 16px;
+  font-weight: 600;
+  background: #fff;
+}
+.login-field input:focus {
+  border-color: var(--azul);
+  box-shadow: 0 0 0 4px #3b5bdb22;
+}
+.login-error {
+  border: 2px solid #f3b6b9;
+  background: var(--vermelho-claro);
+  color: var(--vermelho-texto);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.login-help {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- 4. Mapa de fases ---------- */
+.map-heading h1 {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.map-exit {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--azul);
+}
+.map-overview {
+  border: 2px solid var(--borda);
+  border-bottom-width: 5px;
+  border-radius: var(--raio-grande);
+  padding: 18px 20px;
+}
+.map-overview span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+.map-overview .map-score {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--texto);
+}
+.map-rank {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.map-instructions {
+  border: 2px solid var(--borda);
+  border-radius: var(--raio-grande);
+  background: var(--azul-claro);
+  border-color: #c9d6ff;
+}
+.map-instructions h2 {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.map-instructions ol {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--texto);
+}
+.map-instructions p {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+.map-phase-list {
+  gap: 14px;
+}
+.phase-map .map-phase {
+  min-height: 118px;
+  padding: 18px 20px;
+  border: 2px solid var(--borda);
+  border-bottom-width: 6px;
+  border-radius: var(--raio-grande);
+  background: #fff;
+  transition: transform .1s, border-color .15s, background .15s;
+}
+.phase-map .map-phase:hover:not(:disabled) {
+  background: #f4f7ff;
+  border-color: #9db4ff;
+  transform: translateY(-2px);
+}
+.phase-map .map-phase:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 3px;
+}
+.map-phase-number {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--azul);
+  background: var(--azul-claro);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.map-phase h2 {
+  font-size: 19px;
+  font-weight: 900;
+  max-width: 220px;
+  color: var(--texto);
+}
+.map-phase-topic {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+.map-stars svg {
+  width: 26px;
+  height: 26px;
+}
+.phase-map .map-phase-locked {
+  background: #e6e9f2;
+  border-color: #d5d9e6;
+}
+.map-phase-locked .map-phase-number {
+  background: #d5d9e6;
+  color: #6b7590;
+}
+.map-phase-locked h2 {
+  color: #6b7590;
+}
+.map-phase-locked .map-phase-topic {
+  color: #77819b;
+}
+.map-lock {
+  width: 28px;
+  height: 28px;
+}
+/* a próxima fase disponível pulsa */
+.map-phase-list .map-phase:not(.map-phase-locked):has(+ .map-phase-locked) {
+  animation: pulsar 2s ease-in-out infinite;
+}
+
+/* ---------- 5. Pergunta ---------- */
+main.quiz-page {
+  align-items: start;
+}
+.quiz-panel {
+  animation: entrar .35s ease-out both;
+}
+.quiz-topbar {
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.quiz-progress-group > span {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+}
+.quiz-progress-bar {
+  height: 16px;
+  border-radius: 999px;
+  background: #d6def2;
+}
+.quiz-progress-bar i {
+  position: relative;
+  background: var(--verde-barra);
+  transition: width .5s cubic-bezier(.3, 1.3, .5, 1);
+}
+.quiz-progress-bar i::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 3px;
+  height: 4px;
+  border-radius: 999px;
+  background: #ffffff55;
+}
+.quiz-lives {
+  gap: 4px;
+}
+.quiz-lives svg {
+  width: 28px;
+  height: 28px;
+}
+.quiz-lives .quiz-heart-active {
+  color: var(--coracao);
+}
+.quiz-lives .quiz-heart-lost {
+  animation: coracaoPerde .6s ease-out both;
+}
+.quiz-points {
+  font-size: 17px;
+  font-weight: 900;
+  color: #b98200;
+  background: #fff6cf;
+  border: 2px solid #ffe27a;
+  padding: 4px 12px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.quiz-points.bump {
+  animation: pulo .5s ease-out;
+}
+
+.quiz-scenario {
+  border: 2px solid var(--borda);
+  border-bottom-width: 5px;
+  border-radius: var(--raio-grande);
+  padding: 20px 20px 22px;
+  margin-bottom: 18px;
+}
+.quiz-scenario .scenario-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  background: var(--azul);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.quiz-scenario p {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--texto);
+}
+.negation {
+  background: var(--vermelho-claro);
+  color: var(--vermelho-texto);
+}
+
+.quiz-answers {
+  gap: 12px;
+}
+.quiz-page .quiz-answers .quiz-answer {
+  position: relative;
+  min-height: 68px;
+  padding: 14px 16px;
+  gap: 14px;
+  border: 2px solid var(--borda);
+  border-bottom-width: 5px;
+  border-radius: var(--raio);
+  background: #fff;
+  color: var(--texto);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  transition: transform .08s, border-color .15s, background .15s, opacity .2s;
+}
+.quiz-page .quiz-answers .quiz-answer:hover:not(:disabled) {
+  background: #f4f7ff;
+  border-color: #9db4ff;
+}
+.quiz-page .quiz-answers .quiz-answer:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 2px;
+}
+.quiz-page .quiz-answer .letter {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--borda);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--azul);
+  font-size: 15px;
+  font-weight: 900;
+}
+.quiz-page .quiz-answers .quiz-answer.right {
+  background: var(--verde-claro);
+  border-color: var(--verde);
+  color: var(--verde-texto);
+  animation: pop .45s ease-out;
+}
+.quiz-page .quiz-answers .quiz-answer.right .letter {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #fff;
+}
+.quiz-page .quiz-answers .quiz-answer.right > svg {
+  color: var(--verde);
+  width: 26px;
+  height: 26px;
+}
+.quiz-page .quiz-answers .quiz-answer.wrong {
+  background: var(--vermelho-claro);
+  border-color: var(--vermelho);
+  color: var(--vermelho-texto);
+  animation: tremer .45s ease-in-out;
+}
+.quiz-page .quiz-answers .quiz-answer.wrong .letter {
+  background: var(--vermelho);
+  border-color: var(--vermelho);
+  color: #fff;
+}
+.quiz-page .quiz-answers .quiz-answer.wrong > svg {
+  color: var(--vermelho);
+  width: 26px;
+  height: 26px;
+}
+.quiz-answers.is-answered .quiz-answer:disabled:not(.right):not(.wrong) {
+  opacity: .5;
+}
+.float-points {
+  position: absolute;
+  right: 18px;
+  top: -6px;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--verde);
+  pointer-events: none;
+  animation: subir 1s ease-out forwards;
+}
+
+/* Painel de feedback: gruda embaixo da tela e sobe ao responder */
+.quiz-sheet {
+  position: sticky;
+  z-index: 5;
+  bottom: 12px;
+  margin: 18px 0 0;
+  padding: 18px 18px 20px;
+  border-radius: 24px;
+  box-shadow: 0 8px 30px #1f2a4433;
+  animation: painelSobe .35s cubic-bezier(.2, 1, .3, 1) both;
+}
+.quiz-sheet.is-correct {
+  background: var(--verde-claro);
+  color: var(--verde-texto);
+}
+.quiz-sheet.is-incorrect {
+  background: var(--vermelho-claro);
+  color: var(--vermelho-texto);
+}
+.quiz-sheet .quiz-feedback {
+  margin: 0;
+  color: inherit;
+}
+.quiz-sheet .quiz-feedback-banner {
+  background: transparent;
+  padding: 0;
+  gap: 12px;
+  color: inherit;
+}
+.quiz-sheet .quiz-feedback-banner > svg {
+  width: 36px;
+  height: 36px;
+}
+.quiz-sheet .quiz-feedback-banner b {
+  font-size: 22px;
+  font-weight: 900;
+}
+.quiz-sheet .quiz-feedback-banner span {
+  font-size: 15px;
+  font-weight: 700;
+}
+.quiz-sheet .quiz-feedback .quiz-feedback-details {
+  background: #ffffffaa;
+  border-radius: 14px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  max-height: 28vh;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+.quiz-sheet .quiz-feedback-reference {
+  border-top-color: #1f2a4422;
+  color: var(--texto-suave);
+}
+.quiz-sheet .quiz-next,
+.quiz-feedback + .quiz-next {
+  margin-top: 14px;
+}
+.quiz-sheet.is-correct .quiz-next {
+  background: var(--verde);
+  border-bottom-color: var(--verde-escuro);
+}
+.quiz-sheet.is-correct .quiz-next:hover:not(:disabled) {
+  background: #35ab52;
+}
+.quiz-sheet.is-incorrect .quiz-next {
+  background: var(--vermelho);
+  border-bottom-color: var(--vermelho-escuro);
+}
+.quiz-sheet.is-incorrect .quiz-next:hover:not(:disabled) {
+  background: #e24c51;
+}
+.quiz-back {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--texto-suave);
+}
+.quiz-status {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- 6. Fim de fase e resultado ---------- */
+.phase-complete h1,
+.phase-lost h1 {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.phase-complete-subtitle,
+.phase-lost-subtitle,
+.journey-result-caption,
+.journey-result-score {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+.phase-complete-stars {
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.phase-complete-stars svg {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 4px 0 #0000001a);
+  animation: estrela .6s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+.phase-complete-stars svg:nth-child(1) { animation-delay: .15s; }
+.phase-complete-stars svg:nth-child(2) { animation-delay: .45s; }
+.phase-complete-stars svg:nth-child(3) { animation-delay: .75s; }
+.phase-complete-summary,
+.journey-result-summary,
+.phase-lost-tip {
+  border: 2px solid var(--borda);
+  border-bottom-width: 5px;
+  border-radius: var(--raio-grande);
+  padding: 18px 20px;
+}
+.phase-complete-summary > div,
+.journey-result-summary > div {
+  font-size: 16px;
+  font-weight: 700;
+}
+.phase-complete-total dd {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--verde);
+}
+.phase-lost-hearts {
+  gap: 10px;
+}
+.phase-lost-hearts svg {
+  width: 52px;
+  height: 52px;
+  animation: coracaoPerde .8s ease-out both;
+}
+.phase-lost-tip h2 {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.phase-lost-tip p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texto);
+}
+.journey-medal {
+  width: 120px;
+  height: 120px;
+  background: var(--azul);
+  border-bottom: 8px solid var(--azul-escuro);
+  box-shadow: 0 0 0 8px var(--azul-claro);
+  animation: estrela .7s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+.journey-medal svg {
+  width: 62px;
+  height: 62px;
+}
+.journey-result h1 {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--azul);
+}
+
+/* ---------- 7. Modais e telas auxiliares (Como jogar, perfil, carregando) ---------- */
+.modal {
+  border-radius: 26px;
+  border: 2px solid var(--borda);
+}
+.modal h2 {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--azul);
+}
+.modal p,
+.modal ul,
+.modal label {
+  font-size: 15px;
+  font-weight: 600;
+}
+.modal input {
+  min-height: 52px;
+  border: 2px solid var(--borda);
+  border-radius: var(--raio);
+  font-size: 16px;
+}
+.rules-steps li {
+  background: var(--azul-claro);
+  border-radius: 14px;
+  font-size: 15px;
+}
+.loading-state {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--azul);
+}
+.welcome h1 {
+  font-size: 38px;
+  font-weight: 900;
+}
+.welcome > p {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ---------- 8. Celular pequeno ---------- */
+@media (max-width: 420px) {
+  .quiz-scenario p {
+    font-size: 16px;
+  }
+  .map-stars svg {
+    width: 22px;
+    height: 22px;
+  }
+  .phase-complete-stars svg {
+    width: 54px;
+    height: 54px;
+  }
+}
+
+/* ---------- 9. Animações ---------- */
+@keyframes entrar {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes painelSobe {
+  from { transform: translateY(100%); opacity: .6; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes tremer {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+@keyframes coracaoPerde {
+  0% { transform: scale(1.5); color: var(--coracao); }
+  40% { transform: scale(.8) rotate(-12deg); }
+  100% { transform: scale(1); color: #d5dbe7; }
+}
+@keyframes pulo {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+@keyframes subir {
+  0% { opacity: 0; transform: translateY(8px) scale(.8); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-34px) scale(1.15); }
+}
+@keyframes estrela {
+  0% { transform: scale(0) rotate(-40deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulsar {
+  0%, 100% { box-shadow: 0 0 0 0 #3b5bdb00; }
+  50% { box-shadow: 0 0 0 8px #3b5bdb22; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
