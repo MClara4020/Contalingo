@@ -13,7 +13,7 @@ npm run dev
 
 Abra o endereço exibido pelo Vite (normalmente `http://localhost:5173`). O comando inicia frontend e API juntos. Crie uma conta com **nome completo, matrícula e senha**; depois entre com matrícula e senha. A matrícula é normalizada para maiúsculas, preservando zeros iniciais, e admite até 40 letras, números, pontos, barras ou hífens. A senha deve ter entre 8 e 128 caracteres.
 
-Para usar PostgreSQL localmente, defina `DATABASE_URL` no ambiente antes de iniciar, por exemplo `DATABASE_URL='postgresql://usuario:senha@host/banco?sslmode=require' npm run dev`. `.env` não é carregado automaticamente.
+Para usar PostgreSQL localmente, copie `.env.example` para `.env` e configure `DATABASE_URL`. Os comandos `npm run dev` e `npm run start` carregam esse arquivo automaticamente; ele é ignorado pelo Git. Outros comandos, como `npm run report`, precisam receber as variáveis pelo ambiente.
 
 ```bash
 npm test         # conteúdo, integração HTTP, migração, planilha e handler Vercel
@@ -152,9 +152,9 @@ npm run build
 APP_ORIGIN=https://seu-dominio.com HOST=127.0.0.1 PORT=3001 npm start
 ```
 
-O servidor serve API e `dist/`. Use um proxy HTTPS e `APP_ORIGIN` com a origem pública exata, sem barra final. As variáveis estão em `.env.example`; defina-as no ambiente, pois `.env` não é carregado automaticamente. `npm run preview` serve apenas o frontend.
+O servidor serve API e `dist/`. Use um proxy HTTPS e `APP_ORIGIN` com a origem pública exata, sem barra final. As variáveis estão em `.env.example`; configure-as no ambiente da hospedagem. Localmente, `npm run dev` e `npm run start` carregam `.env`. `npm run preview` serve apenas o frontend.
 
-Defina `DATABASE_URL` para usar PostgreSQL também em um servidor próprio. Sem credenciais remotas, defina `DATABASE_PATH` para alterar o arquivo SQLite e use um volume persistente gravável. O `.env.example` é apenas um modelo: o projeto não carrega `.env` automaticamente. Banco, relatórios e backups não devem ser publicados. O SQLite local requer uma única instância. O limitador de requisições em memória atua por instância do servidor; na Vercel ele não representa um limite global entre funções.
+Defina `DATABASE_URL` para usar PostgreSQL também em um servidor próprio. Sem credenciais remotas, defina `DATABASE_PATH` para alterar o arquivo SQLite e use um volume persistente gravável. O `.env.example` é apenas um modelo: os scripts dev/start carregam `.env` para uso local. Banco, relatórios e backups não devem ser publicados. O SQLite local requer uma única instância. O limitador de requisições em memória atua por instância do servidor; na Vercel ele não representa um limite global entre funções.
 
 ### Se o log ainda mostrar Node 26 ou erro do better-sqlite3
 

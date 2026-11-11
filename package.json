@@ -8,8 +8,8 @@
     "build": "tsc -b && tsc -p tsconfig.server.json && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "dev:client": "vite --host 0.0.0.0",
-    "dev:server": "tsx watch server/index.ts",
-    "start": "NODE_ENV=production tsx server/index.ts",
+    "dev:server": "node --import dotenv/config --import tsx --watch server/index.ts",
+    "start": "NODE_ENV=production node --import dotenv/config --import tsx server/index.ts",
     "test": "tsx --test server/*.test.ts",
     "report": "tsx scripts/export-report.ts",
     "test:e2e": "playwright test",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@libsql/client": "^0.18.0",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
     "exceljs": "^4.4.0",
     "express": "^4.22.3",
     "express-rate-limit": "^7.5.1",
