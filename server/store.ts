@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import type { Client, Transaction, InValue } from '@libsql/client';
+import type { Pool, PoolClient } from 'pg';
 import { BANK_VERSION, phases } from './questions.js';
 import type { StoredQuestion } from './db.js';
 
@@ -97,6 +98,105 @@ export function libsqlStore(client: Client): Store {
   };
 }
 
+function postgresStore(pool: Pool): Store {
+  function direct(connection: Pool | PoolClient): Store {
+    return {
+      prepare(sql) {
+        let parameter = 0;
+        const query = sql.replace(/\?/g, () => `$${++parameter}`);
+        return {
+          get: async (...args) => (await connection.query(query, args)).rows[0],
+          all: async (...args) => (await connection.query(query, args)).rows,
+          run: async (...args) => connection.query(query, args),
+        };
+      },
+      transaction: () => { throw new Error('Transações aninhadas não são suportadas.'); },
+      close: () => {},
+    };
+  }
+  const base = direct(pool);
+  return {
+    ...base,
+    transaction: (fn) => async () => {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const result = await fn(direct(client));
+        await client.query('COMMIT');
+        return result;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+    close: () => { void pool.end(); },
+  };
+}
+
+export async function initializePostgres(pool: Pool) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(746532190)');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users(
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, matricula TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::text)
+      );
+      CREATE TABLE IF NOT EXISTS sessions(
+        token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires BIGINT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS attempts(
+        id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        phase INTEGER NOT NULL CHECK(phase BETWEEN 0 AND 2), question_order TEXT NOT NULL,
+        answers TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'active',
+        created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::text), ended_at TEXT,
+        correct INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0,
+        lives INTEGER NOT NULL DEFAULT 3, bank_version TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS results(
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, phase INTEGER NOT NULL,
+        correct INTEGER NOT NULL, score INTEGER NOT NULL, PRIMARY KEY(user_id,phase)
+      );
+      CREATE TABLE IF NOT EXISTS questions(
+        id TEXT PRIMARY KEY, phase INTEGER NOT NULL, position INTEGER NOT NULL,
+        bank_version TEXT NOT NULL, payload TEXT NOT NULL, explanation TEXT NOT NULL,
+        feedback_a TEXT, feedback_b TEXT, feedback_c TEXT, feedback_d TEXT,
+        connection TEXT NOT NULL, review_status TEXT NOT NULL, review_note TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS responses(
+        id TEXT PRIMARY KEY, attempt_id TEXT NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+        question_id TEXT NOT NULL REFERENCES questions(id), position INTEGER NOT NULL,
+        selected_option INTEGER NOT NULL CHECK(selected_option BETWEEN 0 AND 3),
+        is_correct INTEGER NOT NULL CHECK(is_correct IN (0,1)), answered_at TEXT,
+        UNIQUE(attempt_id,position)
+      );
+      CREATE INDEX IF NOT EXISTS attempts_user ON attempts(user_id);
+      CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
+      CREATE INDEX IF NOT EXISTS responses_question ON responses(question_id);
+    `);
+    for (const [phaseIndex, phase] of phases.entries()) {
+      for (const question of phase.questions) {
+        await client.query(
+          `INSERT INTO questions(id,phase,position,bank_version,payload,explanation,feedback_a,feedback_b,feedback_c,feedback_d,connection,review_status,review_note)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(id) DO NOTHING`,
+          [question.id, phaseIndex, question.number, BANK_VERSION, JSON.stringify({...question, phase:phaseIndex, topic:phase.topic}),
+            question.explanation, ...question.feedback, question.connection, question.reviewStatus, question.reviewNote],
+        );
+      }
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 // Executed as one atomic batch: concurrent cold starts cannot observe half a schema.
 export async function initializeLibsql(client: Client) {
   const version = Number((await client.execute('PRAGMA user_version')).rows[0]?.user_version || 0);
@@ -124,6 +224,14 @@ export async function initializeLibsql(client: Client) {
 }
 
 export async function connectDatabase(): Promise<Store> {
+  const postgresUrl=process.env.DATABASE_URL;
+  if(postgresUrl) {
+    if(!/^postgres(?:ql)?:\/\//i.test(postgresUrl)) throw new Error('DATABASE_URL deve usar postgresql:// ou postgres://.');
+    const {Pool}=await import('pg');
+    const pool=new Pool({connectionString:postgresUrl,max:5});
+    try { await initializePostgres(pool); return postgresStore(pool); }
+    catch(error) { await pool.end(); throw error; }
+  }
   const url=process.env.TURSO_DATABASE_URL;
   if(url) {
     if(!process.env.TURSO_AUTH_TOKEN) throw new Error('Configure TURSO_AUTH_TOKEN.');
@@ -133,7 +241,7 @@ export async function connectDatabase(): Promise<Store> {
     try { await initializeLibsql(client); return libsqlStore(client); }
     catch(error) { client.close(); throw error; }
   }
-  if(process.env.VERCEL) throw new Error('Configure TURSO_DATABASE_URL e TURSO_AUTH_TOKEN na Vercel. SQLite local não é persistente nessa hospedagem.');
+  if(process.env.VERCEL) throw new Error('Configure DATABASE_URL ou TURSO_DATABASE_URL e TURSO_AUTH_TOKEN na hospedagem. SQLite local não é persistente nessa hospedagem.');
   const {openDatabase}=await import('./db.js');
   return asStore(openDatabase(process.env.DATABASE_PATH||'data/contalingo.sqlite'));
 }

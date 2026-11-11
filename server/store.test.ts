@@ -31,3 +31,12 @@ test('Vercel não cria banco temporário se faltarem as credenciais remotas',asy
  try{await assert.rejects(connectDatabase(),/TURSO_DATABASE_URL/);}
  finally{for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
+
+test('DATABASE_URL rejeita outro protocolo em vez de usar a configuração Turso',async()=>{
+ const previous={DATABASE_URL:process.env.DATABASE_URL,TURSO_DATABASE_URL:process.env.TURSO_DATABASE_URL,TURSO_AUTH_TOKEN:process.env.TURSO_AUTH_TOKEN};
+ process.env.DATABASE_URL='mysql://localhost/database';
+ process.env.TURSO_DATABASE_URL='libsql://database.example';
+ process.env.TURSO_AUTH_TOKEN='test-token';
+ try{await assert.rejects(connectDatabase(),/DATABASE_URL deve usar postgresql:\/\/ ou postgres:\/\//);}
+ finally{for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
+});

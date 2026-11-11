@@ -86,7 +86,7 @@ export function createApp(input:Database.Database|Store, options:{production?:bo
  app.get('/api/phases',route((_req,res)=>res.json(phases.map(({questions,...p},id)=>({...p,id,questionCount:questions.length})))));
  async function view(a:Attempt, db:Store=asStore(input)) {
    const order=JSON.parse(a.question_order) as string[];
-   const count=(await db.prepare('SELECT COUNT(*) AS count FROM responses WHERE attempt_id=?').get(a.id) as {count:number}).count;
+   const count=(await db.prepare('SELECT CAST(COUNT(*) AS INTEGER) AS count FROM responses WHERE attempt_id=?').get(a.id) as {count:number}).count;
    const q=a.status==='active'?await storedQuestion(db,order[count]):null;
    return {id:a.id,phase:a.phase,index:count,correct:a.correct,lives:a.lives,score:a.score,status:a.status,
      question:q?{id:q.id,title:q.title,scenario:q.scenario,question:q.question,options:q.options,emphasizeNegation:q.emphasizeNegation}:null};

@@ -34,7 +34,7 @@ export function createVercelHandler(connect: () => Promise<Store> = connectDatab
       if (!res.headersSent) {
         res.statusCode=503;
         res.setHeader('Content-Type','application/json');
-        res.end(JSON.stringify({error:'Banco indisponível. Confira TURSO_DATABASE_URL e TURSO_AUTH_TOKEN na configuração da hospedagem.'}));
+        res.end(JSON.stringify({error:'Banco indisponível. Confira DATABASE_URL ou TURSO_DATABASE_URL e TURSO_AUTH_TOKEN na configuração da hospedagem.'}));
       }
     }
   };

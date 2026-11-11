@@ -35,7 +35,7 @@ export function buildReport(input: Database.Database | Store) {
     for (const u of users) {
       const results=await db.prepare('SELECT phase,correct,score FROM results WHERE user_id=?').all(u.id) as {phase:number;correct:number;score:number}[];
       const total=results.reduce((sum,r)=>sum+r.score,0);
-      const counts=await db.prepare("SELECT COUNT(*) AS attempts, COALESCE(SUM(status='lost'),0) AS losses FROM attempts WHERE user_id=?").get(u.id) as {attempts:number;losses:number};
+      const counts=await db.prepare("SELECT CAST(COUNT(*) AS INTEGER) AS attempts, CAST(COALESCE(SUM(CASE WHEN status='lost' THEN 1 ELSE 0 END),0) AS INTEGER) AS losses FROM attempts WHERE user_id=?").get(u.id) as {attempts:number;losses:number};
       const row:Record<string,string|number>={name:u.name,matricula:u.matricula,total,rank:rankFor(total),...counts};
       phases.forEach((_,i)=>{const r=results.find(r=>r.phase===i);row[`correct${i}`]=r?.correct??0;row[`score${i}`]=r?.score??0;row[`stars${i}`]=starsFor(r?.correct??0);});
       students.addRow(row);
@@ -46,11 +46,14 @@ export function buildReport(input: Database.Database | Store) {
       {header:'Taxa de erro',key:'errorRate',width:15},{header:'Alunos que erraram',key:'students',width:22},
       ...'ABCD'.split('').map(letter=>({header:`Escolheram ${letter}`,key:letter,width:17})),
     ]);
-    const errorRows=await db.prepare(`SELECT q.id,q.phase,q.payload,COUNT(r.id) AS answers,
-      COALESCE(SUM(r.is_correct=0),0) AS errors,
-      COUNT(DISTINCT CASE WHEN r.is_correct=0 THEN a.user_id END) AS students,
-      COALESCE(SUM(r.selected_option=0),0) AS A,COALESCE(SUM(r.selected_option=1),0) AS B,
-      COALESCE(SUM(r.selected_option=2),0) AS C,COALESCE(SUM(r.selected_option=3),0) AS D
+    const errorRows=await db.prepare(`SELECT CAST(COUNT(r.id) AS INTEGER) AS answers,
+      CAST(COALESCE(SUM(CASE WHEN r.is_correct=0 THEN 1 ELSE 0 END),0) AS INTEGER) AS errors,
+      CAST(COUNT(DISTINCT CASE WHEN r.is_correct=0 THEN a.user_id END) AS INTEGER) AS students,
+      q.id,q.phase,q.payload,
+      CAST(COALESCE(SUM(CASE WHEN r.selected_option=0 THEN 1 ELSE 0 END),0) AS INTEGER) AS "A",
+      CAST(COALESCE(SUM(CASE WHEN r.selected_option=1 THEN 1 ELSE 0 END),0) AS INTEGER) AS "B",
+      CAST(COALESCE(SUM(CASE WHEN r.selected_option=2 THEN 1 ELSE 0 END),0) AS INTEGER) AS "C",
+      CAST(COALESCE(SUM(CASE WHEN r.selected_option=3 THEN 1 ELSE 0 END),0) AS INTEGER) AS "D"
       FROM questions q LEFT JOIN responses r ON r.question_id=q.id LEFT JOIN attempts a ON a.id=r.attempt_id
       WHERE q.bank_version=? OR r.id IS NOT NULL GROUP BY q.id ORDER BY errors DESC,q.phase,q.position`).all(BANK_VERSION) as {id:string;phase:number;payload:string;answers:number;errors:number;students:number;A:number;B:number;C:number;D:number}[];
     for(const row of errorRows) errors.addRow({...row,phase:row.phase+1,title:JSON.parse(row.payload).title,errorRate:row.answers?row.errors/row.answers:0});
